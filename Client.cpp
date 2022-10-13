@@ -6,19 +6,12 @@ int main() {
     try {
         boost::asio::io_context io_context;
 
-        tcp::resolver resolver(io_context);
-        tcp::resolver::query query(tcp::v4(), "127.0.0.1", std::to_string(port));
-        tcp::resolver::iterator iterator = resolver.resolve(query);
-
-        tcp::socket s(io_context);
-        s.connect(*iterator);
-
-        Client client;
+        Client client(io_context, "127.0.0.1", common::port);
 
         // Мы предполагаем, что для идентификации пользователя будет использоваться ID.
         // Тут мы "регистрируем" пользователя - отправляем на сервер имя, а сервер возвращает нам
         // ID. Этот ID далее используется при отправке запросов.
-        std::string my_id = client.ProcessRegistration(s);
+        std::string my_id = client.ProcessRegistration();
         std::cout << "registration OK: " << my_id << "\n";
         
         while (true) {
@@ -36,8 +29,8 @@ int main() {
                     // реализован один единственный метод - Hello.
                     // Этот метод получает от сервера приветствие с именем клиента,
                     // отправляя серверу id, полученный при регистрации.
-                    client.SendMessage(s, my_id, Requests::Hello, "");
-                    std::cout << client.ReadMessage(s);
+                    client.SendMessage(my_id, Requests::Hello, "");
+                    std::cout << client.ReadMessage();
                     break;
                 }
                 case 2: {
