@@ -4,38 +4,33 @@
 #include <iostream>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "OrderBook.h"
+#include "User.h"
 
 class Core {
-   public:
-    // "Регистрирует" нового пользователя и возвращает его ID.
-    std::string RegisterNewUser(const std::string& aUserName) {
-        size_t newUserId = mUsers.size();
-        mUsers[newUserId] = aUserName;
+public:
+	// "Регистрирует" нового пользователя и возвращает его ID.
+	client_id_type RegisterNewUser(const std::string& aUserName);
 
-        return std::to_string(newUserId);
-    }
+	// Запрос клиента по ID
+	const std::optional<std::reference_wrapper<const User>> GetUser(client_id_type aUserId);
 
-    // Запрос имени клиента по ID
-    std::string GetUserName(const std::string& aUserId) {
-        const auto userIt = mUsers.find(std::stoi(aUserId));
-        if (userIt == mUsers.cend()) {
-            return "Error! Unknown User";
-        } else {
-            return userIt->second;
-        }
-    }
+	void AddBuyOrder(int value, double price, client_id_type client_id);
+	void AddSellOrder(int value, double price, client_id_type client_id);
 
-   private:
-    // <UserId, UserName>
-    std::map<size_t, std::string> mUsers;
-    OrderBook order_book;
+	void MakeDeal();
+
+	const std::vector<Deal> GetDeals() const { return deals; }
+
+private:
+	// <UserId, UserName>
+	std::map<client_id_type, User> mUsers;
+	OrderBook order_book;
+	std::vector<Deal> deals;
 };
 
-Core& GetCore() {
-    static Core core;
-    return core;
-}
+Core& GetCore();
 
 #endif

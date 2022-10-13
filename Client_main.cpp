@@ -11,7 +11,7 @@ int main() {
         // Мы предполагаем, что для идентификации пользователя будет использоваться ID.
         // Тут мы "регистрируем" пользователя - отправляем на сервер имя, а сервер возвращает нам
         // ID. Этот ID далее используется при отправке запросов.
-        std::string my_id = client.ProcessRegistration();
+        std::string my_id = client.ProcessRegistration(std::cin);
         std::cout << "registration OK: " << my_id << "\n";
         
         while (true) {

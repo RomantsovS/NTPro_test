@@ -49,6 +49,7 @@ Thumbs.db
 *.wmv
 
 .vscode
+.vs
 
 # Build results
 [Bb]uild/

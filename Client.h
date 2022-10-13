@@ -41,10 +41,10 @@ class Client {
     }
 
     // "Создаём" пользователя, получаем его ID.
-    std::string ProcessRegistration() {
+    std::string ProcessRegistration(std::istream& is) {
         std::string name;
         std::cout << "Hello! Enter your name: ";
-        std::cin >> name;
+        is >> name;
 
         // Для регистрации Id не нужен, заполним его нулём
         SendMessage("0", Requests::Registration, name);
