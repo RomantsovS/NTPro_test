@@ -5,6 +5,8 @@
 #include <map>
 #include <string>
 
+#include "OrderBook.h"
+
 class Core {
    public:
     // "Регистрирует" нового пользователя и возвращает его ID.
@@ -28,6 +30,7 @@ class Core {
    private:
     // <UserId, UserName>
     std::map<size_t, std::string> mUsers;
+    OrderBook order_book;
 };
 
 Core& GetCore() {

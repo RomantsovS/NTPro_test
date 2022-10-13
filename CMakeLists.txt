@@ -9,10 +9,12 @@ SET(CMAKE_CXX_STANDARD 17)
 
 option(WITH_GTEST "Whether to build google test" ON)
 
-ADD_EXECUTABLE(Server Server.cpp Server.h Session.h Core.h Common.hpp json.hpp)
-TARGET_LINK_LIBRARIES(Server PRIVATE Threads::Threads ${Boost_LIBRARIES})
+add_library(server_lib SHARED Server.h Session.h Core.h Common.hpp json.hpp OrderBook.cpp OrderBook.h Order.h)
 
-ADD_EXECUTABLE(Client Client.cpp Common.hpp json.hpp)
+ADD_EXECUTABLE(Server Server_main.cpp)
+TARGET_LINK_LIBRARIES(Server PRIVATE Threads::Threads ${Boost_LIBRARIES} server_lib)
+
+ADD_EXECUTABLE(Client Client_main.cpp Common.hpp json.hpp)
 TARGET_LINK_LIBRARIES(Client PRIVATE Threads::Threads ${Boost_LIBRARIES})
 
 if (MSVC)
@@ -42,7 +44,7 @@ if(WITH_GTEST)
     CXX_STANDARD_REQUIRED ON
     )
 
-    target_link_libraries(tests gtest_main)
+    target_link_libraries(tests gtest_main server_lib)
     target_compile_options(tests PRIVATE ${MY_COMLILE_OPTIONS})
 
     include(GoogleTest)
