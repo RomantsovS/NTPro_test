@@ -71,10 +71,12 @@ TEST(TestCore, TestMakeDeal) {
     EXPECT_EQ(core.GetUser(id0)->get().GetBalance(Currencies::USD), 0.0);
     EXPECT_EQ(core.GetUser(id0)->get().GetBalance(Currencies::RUB), 0.0);
 
+    core.AddBuyOrder(10, 60, id0);
     core.AddBuyOrder(10, 62, id0);
     core.AddBuyOrder(20, 63, id1);
 
     core.AddSellOrder(50, 61, id2);
+    core.AddSellOrder(50, 62, id2);
 
     core.MakeDeal();
 
@@ -88,6 +90,24 @@ TEST(TestCore, TestMakeDeal) {
 
     EXPECT_EQ(core.GetUser(id2)->get().GetBalance(Currencies::USD), -20.0);
     EXPECT_EQ(core.GetUser(id2)->get().GetBalance(Currencies::RUB), 1220.0);
+
+    core.MakeDeal();
+
+    EXPECT_EQ(core.GetUser(id0)->get().GetBalance(Currencies::USD), 10.0);
+    EXPECT_EQ(core.GetUser(id0)->get().GetBalance(Currencies::RUB), -610);
+
+    EXPECT_EQ(core.GetUser(id2)->get().GetBalance(Currencies::USD), -30.0);
+    EXPECT_EQ(core.GetUser(id2)->get().GetBalance(Currencies::RUB), 1830.0);
+
+    core.AddBuyOrder(20, 61, id0);
+
+    core.MakeDeal();
+
+    EXPECT_EQ(core.GetUser(id0)->get().GetBalance(Currencies::USD), 30.0);
+    EXPECT_EQ(core.GetUser(id0)->get().GetBalance(Currencies::RUB), -1830.0);
+
+    EXPECT_EQ(core.GetUser(id2)->get().GetBalance(Currencies::USD), -50.0);
+    EXPECT_EQ(core.GetUser(id2)->get().GetBalance(Currencies::RUB), 3050);
 }
 
 TEST(TestAll, Test1) {
@@ -110,7 +130,6 @@ TEST(TestAll, Test1) {
 
         std::string my_id = client.ProcessRegistration(iss);
         os << my_id;
-        }).join();
-
-        EXPECT_EQ(os.str(), expected);
+    }).join();
+    EXPECT_EQ(os.str(), expected);
 }
