@@ -20,13 +20,17 @@ target_include_directories(Client PRIVATE ${Boost_INCLUDE_DIR})
 TARGET_LINK_LIBRARIES(Client PRIVATE Threads::Threads ${Boost_LIBRARIES})
 
 if (MSVC)
-    set(MY_COMLILE_OPTIONS /W4 /WX)
+    set(MY_COMLILE_OPTIONS /W4 /WX /fsanitize=address)
 else ()
-    set(MY_COMLILE_OPTIONS -Wall -Wextra -pedantic -Werror -Wshadow -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC)
+    set(MY_COMLILE_OPTIONS -Wall -Wextra -pedantic -Werror -Wshadow -D_GLIBCXX_DEBUG -D_GLIBCXX_DEBUG_PEDANTIC -fsanitize=address)
 endif()
 
+target_compile_options(server_lib PRIVATE ${MY_COMLILE_OPTIONS})
 target_compile_options(Server PRIVATE ${MY_COMLILE_OPTIONS})
 target_compile_options(Client PRIVATE ${MY_COMLILE_OPTIONS})
+
+target_link_options(Server PRIVATE -fsanitize=address)
+target_link_options(Client PRIVATE -fsanitize=address)
 
 if(WITH_GTEST)
     include(FetchContent)
@@ -48,6 +52,7 @@ if(WITH_GTEST)
 
     target_link_libraries(tests gtest_main server_lib)
     target_compile_options(tests PRIVATE ${MY_COMLILE_OPTIONS})
+    target_link_options(tests PRIVATE -fsanitize=address)
 
     include(GoogleTest)
     gtest_discover_tests(tests)

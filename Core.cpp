@@ -12,14 +12,10 @@ client_id_type Core::RegisterNewUser(const std::string& aUserName) {
     return newUserId;
 }
 
-// Запрос имени клиента по ID
-const std::optional<std::reference_wrapper<const User>> Core::GetUser(client_id_type aUserId) {
-    if (mUsers.count(aUserId) == 0) {
-        return std::nullopt;
-    }
-    else {
-        return mUsers[aUserId];
-    }
+std::optional<std::reference_wrapper<const User>> Core::GetUser(client_id_type aUserId) {
+    if (mUsers.count(aUserId) == 0) return std::nullopt;
+
+    return mUsers.at(aUserId);
 }
 
 void Core::AddBuyOrder(int value, double price, client_id_type client_id) {
@@ -31,10 +27,9 @@ void Core::AddSellOrder(int value, double price, client_id_type client_id) {
 }
 
 void Core::MakeDeal() {
-	auto deal = order_book.MakeDeal();
-    if (!deal)
-        return;
-        
+    auto deal = order_book.MakeDeal();
+    if (!deal) return;
+
     mUsers[deal->GetClientBuyID()].IncreaseBalance(Currencies::USD, deal->GetAmount());
     mUsers[deal->GetClientSellID()].DecreaseBalance(Currencies::USD, deal->GetAmount());
 
