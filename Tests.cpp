@@ -116,6 +116,42 @@ TEST(TestCore, TestMakeDeal) {
     EXPECT_EQ(core.GetUser(id2)->get().GetBalance(Currencies::RUB), 3050);
 }
 
+TEST(TestCore, TestThreads) {
+    Core core;
+
+    client_id_type id0 = core.RegisterNewUser("user1");
+    client_id_type id1 = core.RegisterNewUser("user2");
+    client_id_type id2 = core.RegisterNewUser("user3");
+
+    auto t0 = std::chrono::system_clock::now();
+
+    core.AddBuyOrder(10, 60, id0, t0);
+    core.AddBuyOrder(10, 62, id0, t0);
+    core.AddBuyOrder(20, 63, id1, t0);
+
+    std::this_thread::sleep_for(std::chrono::microseconds(100));
+
+    EXPECT_EQ(core.GetDeals().size(), 0u);
+
+    core.AddSellOrder(50, 61, id2, t0);
+
+    std::this_thread::sleep_for(std::chrono::microseconds(500));
+
+    EXPECT_EQ(core.GetDeals().size(), 2u);
+
+    EXPECT_EQ(core.GetDeals()[0]->GetAmount(), 20);
+    EXPECT_EQ(core.GetDeals()[0]->GetPrice(), 61);
+    EXPECT_EQ(core.GetDeals()[0]->GetClientBuyID(), id1);
+    EXPECT_EQ(core.GetDeals()[0]->GetClientSellID(), id2);
+
+    EXPECT_EQ(core.GetDeals()[1]->GetAmount(), 10);
+    EXPECT_EQ(core.GetDeals()[1]->GetPrice(), 61);
+    EXPECT_EQ(core.GetDeals()[1]->GetClientBuyID(), id0);
+    EXPECT_EQ(core.GetDeals()[1]->GetClientSellID(), id2);
+
+    core.AddSellOrder(50, 62, id2, t0);
+}
+
 TEST(TestAll, Test1) {
     std::ostringstream os;
     const std::string expected = R"(0)";

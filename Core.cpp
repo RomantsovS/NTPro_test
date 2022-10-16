@@ -9,13 +9,24 @@ Core& GetCore() {
 	return core;
 }
 
-Core::Core(bool run_thread) {
+Core::Core(bool run_thread) : stopped_(!run_thread), moreWorkToDo(false) {
 	if(run_thread)
 		thread_ = std::thread(&Core::Do_work, this);
 }
 
 Core::~Core() {
-	thread_.detach();
+	Stop();
+}
+
+void Core::Stop() {
+	if (!stopped_) {
+		stopped_ = true;
+		cv_.notify_one();
+		thread_.join();
+	}
+	else {
+		// throw std::runtime_error("already stopped");
+	}
 }
 
 client_id_type Core::RegisterNewUser(const std::string& aUserName) {
@@ -36,6 +47,8 @@ std::string Core::AddBuyOrder(int amount, double price, client_id_type client_id
 	order_book.AddBuyOrder(order);
 	client_orders[client_id][order_id++] = order;
 
+	SignalWork();
+
 	return "added OK\n";
 }
 
@@ -43,6 +56,8 @@ std::string Core::AddSellOrder(int amount, double price, client_id_type client_i
 	auto order = std::make_shared<Order>(amount, price, Order::Type::sell, client_id, time, order_id);
 	order_book.AddSellOrder(order);
 	client_orders[client_id][order_id++] = order;
+
+	SignalWork();
 
 	return "added OK\n";
 }
@@ -61,33 +76,42 @@ std::string Core::GetOrders(client_id_type client_id) const {
 	return msg.dump();
 }
 
-void Core::MakeDeal() {
-	auto orders_pair = order_book.MakeDeal();
-	if (!orders_pair) return;
+bool Core::MakeDeal() {
+	int min_amount;
+	std::optional<OrdersPair> orders_pair;
 
-	int min_amount = std::min(orders_pair->buy->GetAmount(), orders_pair->sell->GetAmount());
+	{
+		std::lock_guard lg(mutex_);
 
-	orders_pair->buy->SetAmount(orders_pair->buy->GetAmount() - min_amount);
-	orders_pair->sell->SetAmount(orders_pair->sell->GetAmount() - min_amount);
+		orders_pair = order_book.MakeDeal();
+		if (!orders_pair) return false;
 
-	if (orders_pair->buy->GetAmount() > 0) order_book.AddBuyOrder(orders_pair->buy);
-	else client_orders[orders_pair->buy->GetClientID()].erase(orders_pair->buy->GetID());
-	if (orders_pair->sell->GetAmount() > 0) order_book.AddSellOrder(orders_pair->sell);
-	else client_orders[orders_pair->sell->GetClientID()].erase(orders_pair->sell->GetID());
+		min_amount = std::min(orders_pair->buy->GetAmount(), orders_pair->sell->GetAmount());
 
-	mUsers[orders_pair->buy->GetClientID()].IncreaseBalance(Currencies::USD, min_amount);
-	mUsers[orders_pair->sell->GetClientID()].DecreaseBalance(Currencies::USD, min_amount);
+		orders_pair->buy->SetAmount(orders_pair->buy->GetAmount() - min_amount);
+		orders_pair->sell->SetAmount(orders_pair->sell->GetAmount() - min_amount);
 
-	double val = min_amount * orders_pair->sell->GetPrice();
+		if (orders_pair->buy->GetAmount() > 0) order_book.AddBuyOrder(orders_pair->buy);
+		else client_orders[orders_pair->buy->GetClientID()].erase(orders_pair->buy->GetID());
+		if (orders_pair->sell->GetAmount() > 0) order_book.AddSellOrder(orders_pair->sell);
+		else client_orders[orders_pair->sell->GetClientID()].erase(orders_pair->sell->GetID());
 
-	mUsers[orders_pair->buy->GetClientID()].DecreaseBalance(Currencies::RUB, val);
-	mUsers[orders_pair->sell->GetClientID()].IncreaseBalance(Currencies::RUB, val);
+		mUsers[orders_pair->buy->GetClientID()].IncreaseBalance(Currencies::USD, min_amount);
+		mUsers[orders_pair->sell->GetClientID()].DecreaseBalance(Currencies::USD, min_amount);
+
+		double val = min_amount * orders_pair->sell->GetPrice();
+
+		mUsers[orders_pair->buy->GetClientID()].DecreaseBalance(Currencies::RUB, val);
+		mUsers[orders_pair->sell->GetClientID()].IncreaseBalance(Currencies::RUB, val);
+	}
 
 	deals.push_back(std::make_shared<Deal>(min_amount, orders_pair->sell->GetPrice(), orders_pair->buy->GetClientID(), orders_pair->buy->GetID(),
 		orders_pair->sell->GetClientID(), orders_pair->sell->GetID(), std::chrono::system_clock::now()));
 
 	client_deals[orders_pair->buy->GetClientID()].push_back(deals.back());
 	client_deals[orders_pair->sell->GetClientID()].push_back(deals.back());
+
+	return true;
 }
 
 std::string Core::GetClientDeals(client_id_type client_id) const {
@@ -116,9 +140,22 @@ std::string Core::GetClientBalance(client_id_type client_id) const {
 	return msg.dump();
 }
 
+void Core::SignalWork() {
+	std::lock_guard lg(moreWorkToDoMutex);
+	moreWorkToDo = true;
+	cv_.notify_one();
+}
+
 void Core::Do_work() {
 	while (true) {
-		MakeDeal();
-		std::this_thread::sleep_for(std::chrono::microseconds(100));
+		std::unique_lock<std::mutex> lock(moreWorkToDoMutex);
+		cv_.wait(lock, [this] { return stopped_ || moreWorkToDo; });
+
+		if (stopped_ && !moreWorkToDo)
+			return;
+
+		while (MakeDeal()) {}
+		moreWorkToDo = false;
+		//std::this_thread::sleep_for(std::chrono::microseconds(100));
 	}
 }

@@ -15,7 +15,7 @@ public:
 	Order(int amount, double price, Type type, client_id_type client_id,
 		std::chrono::time_point<std::chrono::system_clock> time, size_t id)
 		: amount_(amount), price_(price), type_(type), client_id_(client_id), time_(time), id_(id) {}
-	~Order() { std::cout << "Order dtor\n"; }
+	//~Order() { std::cout << "Order dtor\n"; }
 
 		int GetAmount() const { return amount_; }
 		void SetAmount(int amount) { amount_ = amount; }
