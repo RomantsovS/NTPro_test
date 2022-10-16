@@ -46,19 +46,16 @@ TEST(TestOrderBook, TestMakeDeal) {
     EXPECT_EQ(deal.has_value(), true);
 
     EXPECT_EQ(order_book.GetBuyOrder().has_value(), true);
-    EXPECT_EQ(order_book.GetSellOrder().has_value(), true);
+    EXPECT_EQ(order_book.GetSellOrder().has_value(), false);
 
     EXPECT_EQ(order_book.GetBuyOrder()->get()->GetPrice(), 62);
     EXPECT_EQ(order_book.GetBuyOrder()->get()->GetAmount(), 10);
-
-    EXPECT_EQ(order_book.GetSellOrder()->get()->GetPrice(), 61);
-    EXPECT_EQ(order_book.GetSellOrder()->get()->GetAmount(), 30);
 }
 
 TEST(TestCore, TestMakeDeal) {
     std::ostringstream os;
 
-    Core core;
+    Core core(false);
 
     client_id_type id0 = core.RegisterNewUser("user1");
     client_id_type id1 = core.RegisterNewUser("user2");

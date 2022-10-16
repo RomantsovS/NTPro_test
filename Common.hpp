@@ -16,6 +16,7 @@ static std::string Registration = "Reg";
 static std::string Hello = "Hel";
 static std::string AddOrder = "AddOrder";
 static std::string GetOrders = "GetOrders";
+static std::string GetClientDeals = "GetClientDeals";
 
 enum class OrderType {
 	Buy = 1,

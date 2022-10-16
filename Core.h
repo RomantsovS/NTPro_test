@@ -8,12 +8,15 @@
 #include <string>
 #include <vector>
 #include <set>
+#include <thread>
 
 #include "OrderBook.h"
 #include "User.h"
 
 class Core {
    public:
+       Core(bool run_thread = true);
+       ~Core();
     // "Регистрирует" нового пользователя и возвращает его ID.
     client_id_type RegisterNewUser(const std::string& aUserName);
 
@@ -27,15 +30,20 @@ class Core {
 
     void MakeDeal();
 
-    const std::vector<Deal> GetDeals() const { return deals; }
+    const std::vector<std::shared_ptr<Deal>> GetDeals() const { return deals; }
+    std::string GetClientDeals(client_id_type client_id) const;
 
    private:
+       void Do_work();
+
     // <UserId, UserName>
     std::map<std::string, User> mUsers;
     OrderBook order_book;
     size_t order_id = 0;
     std::map<client_id_type, std::map<size_t, std::shared_ptr<Order>>> client_orders;
-    std::vector<Deal> deals;
+    std::vector<std::shared_ptr<Deal>> deals;
+    std::map<client_id_type, std::vector<std::shared_ptr<Deal>>> client_deals;
+    std::thread thread_;
 };
 
 Core& GetCore();

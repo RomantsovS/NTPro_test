@@ -25,6 +25,7 @@ class Deal {
     client_id_type GetClientSellID() const { return order_sell_client_id_; }
     size_t GetOrderBuyID() const { return order_buy_id_; }
     size_t GetOrderSellID() const { return order_sell_id_; }
+    std::chrono::time_point<std::chrono::system_clock> GetTime() const { return time_; }
 
    private:
     int amount_;

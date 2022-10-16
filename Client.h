@@ -25,6 +25,7 @@ public:
 	void AddOrder();
 
 	void GetOrders();
+	void GetClientDeals();
 
 private:
 	boost::asio::ip::tcp::resolver resolver_;

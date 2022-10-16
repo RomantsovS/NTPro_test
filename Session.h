@@ -61,6 +61,9 @@ private:
 				else if (reqType == Requests::GetOrders) {
 					reply = GetCore().GetOrders(j["UserId"]);
 				}
+				else if (reqType == Requests::GetClientDeals) {
+					reply = GetCore().GetClientDeals(j["UserId"]);
+				}
 
 				do_write(reply);
 			}

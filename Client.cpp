@@ -79,13 +79,31 @@ void Client::GetOrders() {
     }
 
     for (const auto& order : orders) {
-        auto i = order["type"].get<int>();
-
         std::chrono::microseconds dur(order["time"].get<size_t>());
         std::chrono::time_point<std::chrono::system_clock> dt(dur);
         auto tt = std::chrono::system_clock::to_time_t(dt);
 
-        std::cout << "type: " << Requests::OrderTypeString.at(static_cast<Requests::OrderType>(i))
+        std::cout << "type: " << Requests::OrderTypeString.at(static_cast<Requests::OrderType>(order["type"].get<int>()))
+            << " amount: " << order["amount"] << " price: " << order["price"]
+            << " time: " << std::put_time(std::localtime(&tt), "%c") << '\n';
+    }
+}
+
+void Client::GetClientDeals() {
+    SendMessageToServer(id_, Requests::GetClientDeals, "");
+    auto orders = json::parse(ReadMessage());
+
+    if (orders.empty()) {
+        std::cout << "No orders\n";
+        return;
+    }
+
+    for (const auto& order : orders) {
+        std::chrono::microseconds dur(order["time"].get<size_t>());
+        std::chrono::time_point<std::chrono::system_clock> dt(dur);
+        auto tt = std::chrono::system_clock::to_time_t(dt);
+
+        std::cout << "type: " << Requests::OrderTypeString.at(static_cast<Requests::OrderType>(order["type"].get<int>()))
             << " amount: " << order["amount"] << " price: " << order["price"]
             << " time: " << std::put_time(std::localtime(&tt), "%c") << '\n';
     }

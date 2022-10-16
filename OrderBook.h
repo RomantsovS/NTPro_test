@@ -10,6 +10,10 @@
 #include "Deal.h"
 #include "Order.h"
 
+struct OrdersPair {
+    std::shared_ptr<Order> buy, sell;
+};
+
 class OrderBook {
    public:
     void AddBuyOrder(std::shared_ptr<Order> order);
@@ -18,7 +22,7 @@ class OrderBook {
     std::optional<std::shared_ptr<Order>> GetBuyOrder();
     std::optional<std::shared_ptr<Order>> GetSellOrder();
 
-    std::optional<Deal> MakeDeal();
+    std::optional<OrdersPair> MakeDeal();
 
    private:
     struct cmp_buy {
