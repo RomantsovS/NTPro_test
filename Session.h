@@ -64,6 +64,9 @@ private:
 				else if (reqType == Requests::GetClientDeals) {
 					reply = GetCore().GetClientDeals(j["UserId"]);
 				}
+				else if (reqType == Requests::GetClientBalance) {
+					reply = GetCore().GetClientBalance(j["UserId"]);
+				}
 
 				do_write(reply);
 			}

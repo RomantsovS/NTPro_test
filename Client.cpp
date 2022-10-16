@@ -108,3 +108,11 @@ void Client::GetClientDeals() {
             << " time: " << std::put_time(std::localtime(&tt), "%c") << '\n';
     }
 }
+
+void Client::GetClientBalance() {
+    SendMessageToServer(id_, Requests::GetClientBalance, "");
+    auto balances = json::parse(ReadMessage());
+
+    std::cout << "USD: " << balances["USD"] << '\n';
+    std::cout << "RUB: " << balances["RUB"] << std::endl;
+}

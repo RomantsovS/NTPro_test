@@ -32,6 +32,7 @@ class Core {
 
     const std::vector<std::shared_ptr<Deal>> GetDeals() const { return deals; }
     std::string GetClientDeals(client_id_type client_id) const;
+    std::string GetClientBalance(client_id_type client_id) const;
 
    private:
        void Do_work();

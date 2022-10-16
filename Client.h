@@ -26,6 +26,7 @@ public:
 
 	void GetOrders();
 	void GetClientDeals();
+	void GetClientBalance();
 
 private:
 	boost::asio::ip::tcp::resolver resolver_;

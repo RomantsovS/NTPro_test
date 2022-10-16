@@ -17,6 +17,7 @@ static std::string Hello = "Hel";
 static std::string AddOrder = "AddOrder";
 static std::string GetOrders = "GetOrders";
 static std::string GetClientDeals = "GetClientDeals";
+static std::string GetClientBalance = "GetClientBalance";
 
 enum class OrderType {
 	Buy = 1,

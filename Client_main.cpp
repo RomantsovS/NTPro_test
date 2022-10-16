@@ -23,6 +23,7 @@ int main() {
 				"2) Add order\n"
 				"3) Get orders\n"
 				"4) Get client deals\n"
+				"5) Get client balance\n"
 				<< std::endl;
 
 			short menu_option_num;
@@ -51,6 +52,10 @@ int main() {
 			}
 			case 4: {
 				client.GetClientDeals();
+				break;
+			}
+			case 5: {
+				client.GetClientBalance();
 				break;
 			}
 			default: {

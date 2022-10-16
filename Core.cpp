@@ -104,6 +104,18 @@ std::string Core::GetClientDeals(client_id_type client_id) const {
 	return msg.dump();
 }
 
+std::string Core::GetClientBalance(client_id_type client_id) const {
+	json msg;
+	if (mUsers.count(client_id) == 0)
+		return msg.dump();
+
+	auto& user = mUsers.at(client_id);
+	msg["USD"] = user.GetBalance(Currencies::USD);
+	msg["RUB"] = user.GetBalance(Currencies::RUB);
+
+	return msg.dump();
+}
+
 void Core::Do_work() {
 	while (true) {
 		MakeDeal();
