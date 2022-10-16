@@ -15,9 +15,11 @@ ADD_EXECUTABLE(Server Server_main.cpp)
 target_include_directories(Server PRIVATE ${Boost_INCLUDE_DIR})
 TARGET_LINK_LIBRARIES(Server PRIVATE Threads::Threads ${Boost_LIBRARIES} server_lib)
 
-ADD_EXECUTABLE(Client Client_main.cpp Common.hpp json.hpp)
+add_library(client_lib STATIC Client.cpp Common.hpp json.hpp)
+
+ADD_EXECUTABLE(Client Client_main.cpp)
 target_include_directories(Client PRIVATE ${Boost_INCLUDE_DIR})
-TARGET_LINK_LIBRARIES(Client PRIVATE Threads::Threads ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(Client PRIVATE Threads::Threads ${Boost_LIBRARIES} client_lib)
 
 if (MSVC)
     set(MY_COMLILE_OPTIONS /W4 /WX)
@@ -52,7 +54,7 @@ if(WITH_GTEST)
     CXX_STANDARD_REQUIRED ON
     )
 
-    target_link_libraries(tests gtest_main server_lib)
+    target_link_libraries(tests gtest_main server_lib client_lib)
     target_compile_options(tests PRIVATE ${MY_COMLILE_OPTIONS})
     if (NOT MSVC)
         target_link_options(tests PRIVATE -fsanitize=address)

@@ -7,6 +7,7 @@
 #include <optional>
 #include <string>
 #include <vector>
+#include <set>
 
 #include "OrderBook.h"
 #include "User.h"
@@ -19,8 +20,10 @@ class Core {
     // Запрос клиента по ID
 	std::optional<std::reference_wrapper<const User>> GetUser(client_id_type aUserId);
 
-    void AddBuyOrder(int value, double price, client_id_type client_id);
-    void AddSellOrder(int value, double price, client_id_type client_id);
+    std::string AddBuyOrder(int amount, double price, client_id_type client_id, std::chrono::time_point<std::chrono::system_clock> time);
+    std::string AddSellOrder(int amount, double price, client_id_type client_id, std::chrono::time_point<std::chrono::system_clock> time);
+
+    std::string GetOrders(client_id_type client_id) const;
 
     void MakeDeal();
 
@@ -28,8 +31,10 @@ class Core {
 
    private:
     // <UserId, UserName>
-    std::map<client_id_type, User> mUsers;
+    std::map<std::string, User> mUsers;
     OrderBook order_book;
+    size_t order_id = 0;
+    std::map<client_id_type, std::map<size_t, std::shared_ptr<Order>>> client_orders;
     std::vector<Deal> deals;
 };
 

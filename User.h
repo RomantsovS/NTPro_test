@@ -1,7 +1,9 @@
 #ifndef USER_H
 #define USER_H
 
-using client_id_type = size_t;
+#include <string>
+
+using client_id_type = std::string;
 
 enum class Currencies {
 	USD,

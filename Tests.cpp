@@ -11,24 +11,24 @@ TEST(TestOrderBook, TestAddOrders) {
 
     OrderBook order_book;
 
-    order_book.AddBuyOrder(10, 62, 0);
+    order_book.AddBuyOrder(std::make_shared<Order>(10, 62, Order::Type::buy, "0", std::chrono::system_clock::now(), 0));
 
     {
         auto order_buy = order_book.GetBuyOrder();
-        EXPECT_EQ(order_buy->get().GetPrice(), 62);
+        EXPECT_EQ(order_buy->get()->GetPrice(), 62);
     }
 
-    order_book.AddBuyOrder(20, 63, 1);
+    order_book.AddBuyOrder(std::make_shared<Order>(20, 63, Order::Type::buy, "1", std::chrono::system_clock::now(), 1));
 
     {
         auto order_buy = order_book.GetBuyOrder();
-        EXPECT_EQ(order_buy->get().GetPrice(), 63);
+        EXPECT_EQ(order_buy->get()->GetPrice(), 63);
     }
 
-    order_book.AddSellOrder(50, 61, 2);
+    order_book.AddSellOrder(std::make_shared<Order>(50, 61, Order::Type::sell, "2", std::chrono::system_clock::now(), 2));
     auto order_sell = order_book.GetSellOrder();
 
-    EXPECT_EQ(order_sell->get().GetPrice(), 61);
+    EXPECT_EQ(order_sell->get()->GetPrice(), 61);
 }
 
 TEST(TestOrderBook, TestMakeDeal) {
@@ -36,10 +36,10 @@ TEST(TestOrderBook, TestMakeDeal) {
 
     OrderBook order_book;
 
-    order_book.AddBuyOrder(10, 62, 0);
-    order_book.AddBuyOrder(20, 63, 1);
+    order_book.AddBuyOrder(std::make_shared<Order>(10, 62, Order::Type::buy, "0", std::chrono::system_clock::now(), 0));
+    order_book.AddBuyOrder(std::make_shared<Order>(20, 63, Order::Type::buy, "1", std::chrono::system_clock::now(), 1));
 
-    order_book.AddSellOrder(50, 61, 2);
+    order_book.AddSellOrder(std::make_shared<Order>(50, 61, Order::Type::sell, "2", std::chrono::system_clock::now(), 2));
     
     auto deal = order_book.MakeDeal();
 
@@ -48,11 +48,11 @@ TEST(TestOrderBook, TestMakeDeal) {
     EXPECT_EQ(order_book.GetBuyOrder().has_value(), true);
     EXPECT_EQ(order_book.GetSellOrder().has_value(), true);
 
-    EXPECT_EQ(order_book.GetBuyOrder()->get().GetPrice(), 62);
-    EXPECT_EQ(order_book.GetBuyOrder()->get().GetAmount(), 10);
+    EXPECT_EQ(order_book.GetBuyOrder()->get()->GetPrice(), 62);
+    EXPECT_EQ(order_book.GetBuyOrder()->get()->GetAmount(), 10);
 
-    EXPECT_EQ(order_book.GetSellOrder()->get().GetPrice(), 61);
-    EXPECT_EQ(order_book.GetSellOrder()->get().GetAmount(), 30);
+    EXPECT_EQ(order_book.GetSellOrder()->get()->GetPrice(), 61);
+    EXPECT_EQ(order_book.GetSellOrder()->get()->GetAmount(), 30);
 }
 
 TEST(TestCore, TestMakeDeal) {
@@ -64,19 +64,26 @@ TEST(TestCore, TestMakeDeal) {
     client_id_type id1 = core.RegisterNewUser("user2");
     client_id_type id2 = core.RegisterNewUser("user3");
 
-    EXPECT_EQ(id0, 0);
-    EXPECT_EQ(id1, 1);
-    EXPECT_EQ(id2, 2);
+    EXPECT_EQ(id0, "0");
+    EXPECT_EQ(id1, "1");
+    EXPECT_EQ(id2, "2");
 
     EXPECT_EQ(core.GetUser(id0)->get().GetBalance(Currencies::USD), 0.0);
     EXPECT_EQ(core.GetUser(id0)->get().GetBalance(Currencies::RUB), 0.0);
 
-    core.AddBuyOrder(10, 60, id0);
-    core.AddBuyOrder(10, 62, id0);
-    core.AddBuyOrder(20, 63, id1);
+    auto t0 = std::chrono::system_clock::now();
+    core.AddBuyOrder(10, 60, id0, t0);
 
-    core.AddSellOrder(50, 61, id2);
-    core.AddSellOrder(50, 62, id2);
+    os << "[{\"amount\":10,\"price\":60.0,\"time\":" << std::chrono::duration_cast<std::chrono::microseconds>(t0.time_since_epoch()).count()
+        << ",\"type\":1}]";
+
+    EXPECT_EQ(core.GetOrders(id0), os.str());
+
+    core.AddBuyOrder(10, 62, id0, t0);
+    core.AddBuyOrder(20, 63, id1, t0);
+
+    core.AddSellOrder(50, 61, id2, std::chrono::system_clock::now());
+    core.AddSellOrder(50, 62, id2, std::chrono::system_clock::now());
 
     core.MakeDeal();
 
@@ -91,6 +98,8 @@ TEST(TestCore, TestMakeDeal) {
     EXPECT_EQ(core.GetUser(id2)->get().GetBalance(Currencies::USD), -20.0);
     EXPECT_EQ(core.GetUser(id2)->get().GetBalance(Currencies::RUB), 1220.0);
 
+    EXPECT_EQ(core.GetOrders(id1), "[]");
+
     core.MakeDeal();
 
     EXPECT_EQ(core.GetUser(id0)->get().GetBalance(Currencies::USD), 10.0);
@@ -99,7 +108,7 @@ TEST(TestCore, TestMakeDeal) {
     EXPECT_EQ(core.GetUser(id2)->get().GetBalance(Currencies::USD), -30.0);
     EXPECT_EQ(core.GetUser(id2)->get().GetBalance(Currencies::RUB), 1830.0);
 
-    core.AddBuyOrder(20, 61, id0);
+    core.AddBuyOrder(20, 61, id0, std::chrono::system_clock::now());
 
     core.MakeDeal();
 
@@ -128,8 +137,8 @@ TEST(TestAll, Test1) {
 
         std::istringstream iss(R"(name)");
 
-        std::string my_id = client.ProcessRegistration(iss);
-        os << my_id;
+        client.ProcessRegistration(iss);
+        os << client.GetID();
     }).join();
     EXPECT_EQ(os.str(), expected);
 }
