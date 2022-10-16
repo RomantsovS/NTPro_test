@@ -6,6 +6,7 @@
 #include <queue>
 #include <memory>
 #include <map>
+#include <tuple>
 
 #include "Deal.h"
 #include "Order.h"
@@ -27,7 +28,7 @@ class OrderBook {
    private:
     struct cmp_buy {
         bool operator()(const std::shared_ptr<Order>& lhs, const std::shared_ptr<Order>& rhs) const {
-            return lhs->GetPrice() < rhs->GetPrice();
+            return std::make_tuple(lhs->GetPrice(), rhs->GetTime()) < std::make_tuple(rhs->GetPrice(), lhs->GetTime());
         }
     };
 
@@ -35,7 +36,7 @@ class OrderBook {
 
     struct cmp_sell {
         bool operator()(const std::shared_ptr<Order>& lhs, const std::shared_ptr<Order>& rhs) const {
-            return lhs->GetPrice() > rhs->GetPrice();
+            return std::make_tuple(lhs->GetPrice(), lhs->GetTime()) > std::make_tuple(rhs->GetPrice(), rhs->GetTime());
         }
     };
 

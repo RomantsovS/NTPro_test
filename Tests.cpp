@@ -12,9 +12,12 @@ TEST(TestOrderBook, TestAddOrders) {
     OrderBook order_book;
 
     order_book.AddBuyOrder(std::make_shared<Order>(10, 62, Order::Type::buy, "0", std::chrono::system_clock::now(), 0));
+    order_book.AddBuyOrder(std::make_shared<Order>(10, 62, Order::Type::buy, "0", std::chrono::system_clock::now() + std::chrono::seconds(1), 5));
+    order_book.AddBuyOrder(std::make_shared<Order>(15, 62, Order::Type::buy, "0", std::chrono::system_clock::now() - std::chrono::seconds(1), 3));
 
     {
         auto order_buy = order_book.GetBuyOrder();
+        EXPECT_EQ(order_buy->get()->GetID(), 3);
         EXPECT_EQ(order_buy->get()->GetPrice(), 62);
     }
 
@@ -26,8 +29,10 @@ TEST(TestOrderBook, TestAddOrders) {
     }
 
     order_book.AddSellOrder(std::make_shared<Order>(50, 61, Order::Type::sell, "2", std::chrono::system_clock::now(), 2));
+    order_book.AddSellOrder(std::make_shared<Order>(50, 61, Order::Type::sell, "2", std::chrono::system_clock::now() - std::chrono::seconds(1), 4));
     auto order_sell = order_book.GetSellOrder();
 
+    EXPECT_EQ(order_sell->get()->GetID(), 4);
     EXPECT_EQ(order_sell->get()->GetPrice(), 61);
 }
 
@@ -44,10 +49,13 @@ TEST(TestOrderBook, TestMakeDeal) {
     auto deal = order_book.MakeDeal();
 
     EXPECT_EQ(deal.has_value(), true);
+    EXPECT_EQ(deal->buy->GetID(), 1);
+    EXPECT_EQ(deal->sell->GetID(), 2);
 
     EXPECT_EQ(order_book.GetBuyOrder().has_value(), true);
     EXPECT_EQ(order_book.GetSellOrder().has_value(), false);
 
+    EXPECT_EQ(order_book.GetBuyOrder()->get()->GetID(), 0);
     EXPECT_EQ(order_book.GetBuyOrder()->get()->GetPrice(), 62);
     EXPECT_EQ(order_book.GetBuyOrder()->get()->GetAmount(), 10);
 }
